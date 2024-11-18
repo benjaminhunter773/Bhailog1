@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypted Page</title>
+    <script>
+        async function decryptHTML() {
+            const response = await fetch("index.html.enc");
+            const encryptedData = await response.arrayBuffer();
+
+            // Hardcoded decryption password
+            const password = "yourpassword";
+            const key = new TextEncoder().encode(password).slice(0, 32);
+            const iv = new Uint8Array(16); // Default IV (zeroes)
+
+            try {
+                const cryptoKey = await crypto.subtle.importKey(
+                    "raw",
+                    key,
+                    { name: "AES-CBC" },
+                    false,
+                    ["decrypt"]
+                );
+
+                const decryptedData = await crypto.subtle.decrypt(
+                    { name: "AES-CBC", iv: iv },
+                    cryptoKey,
+                    encryptedData
+                );
+
+                const decoder = new TextDecoder();
+                document.open();
+                document.write(decoder.decode(decryptedData));
+                document.close();
+            } catch (e) {
+                console.error("Decryption failed", e);
+            }
+        }
+
+        // Automatically decrypt the page on load
+        decryptHTML();
+    </script>
+</head>
+<body>
+    <p>Decrypting content...</p>
+</body>
+</html>
