@@ -1,0 +1,59 @@
+<link rel="icon" type="image/png" href="icon.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon.png">
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypted Page</title>
+    <script>
+        async function decryptPage() {
+            const password = prompt("Enter the decryption password:");
+            if (!password) return;
+
+            // Fetch the encrypted file
+            const response = await fetch("index.html.enc");
+            const encryptedData = await response.arrayBuffer();
+
+            // Create the decryption key and IV
+            const key = new TextEncoder().encode(password).slice(0, 32);
+            const iv = new Uint8Array(16); // Default IV for AES-CBC
+
+            try {
+                // Import the key for AES decryption
+                const cryptoKey = await crypto.subtle.importKey(
+                    "raw",
+                    key,
+                    { name: "AES-CBC" },
+                    false,
+                    ["decrypt"]
+                );
+
+                // Decrypt the content
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: "AES-CBC", iv: iv },
+                    cryptoKey,
+                    encryptedData
+                );
+
+                // Decode and inject the HTML into the page
+                const decoder = new TextDecoder();
+                document.open();
+                document.write(decoder.decode(decrypted));
+                document.close();
+            } catch (error) {
+                alert("Failed to decrypt. Incorrect password or decryption error.");
+            }
+        }
+
+        // Decrypt the page when the script loads
+        decryptPage();
+    </script>
+</head>
+<body>
+    <p>Decrypting content...</p>
+</body>
+</html>
